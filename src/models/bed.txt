@@ -1,0 +1,15 @@
+// Roomle script (Roomle Blender addon version 2.1.0)
+AddExternalMesh('catalog_id:bed_Back',Vector3f{1731.5,4.2,1201.5},Vector3f{-865.7,-1110,4.3});
+SetObjSurface('catalog_id:default');
+AddExternalMesh('catalog_id:bed_Fabric',Vector3f{1740,2127.2,1210},Vector3f{-870,-1107.2,0});
+SetObjSurface('catalog_id:default');
+AddExternalMesh('catalog_id:bed_Fabric_Mettress',Vector3f{1569.4,1969.4,200},Vector3f{-784.7,-984.7,430});
+SetObjSurface('catalog_id:default');
+AddExternalMesh('catalog_id:bed_Fabric_Mattress_Edge',Vector3f{1602,2002,202},Vector3f{-801,-1001,429});
+SetObjSurface('catalog_id:default');
+AddExternalMesh('catalog_id:bed_Metal',Vector3f{1596.8,805.1,25.1},Vector3f{-798.4,-402.5,517.5});
+SetObjSurface('catalog_id:default');
+AddExternalMesh('catalog_id:bed_Legs_Wood',Vector3f{1620,2020,30},Vector3f{-810,-1010,0});
+SetObjSurface('catalog_id:default');
+AddExternalMesh('catalog_id:bed_Mesh.006',Vector3f{50,2.2,20},Vector3f{715,1020,245});
+SetObjSurface('catalog_id:default');

@@ -11,6 +11,7 @@ import params from './params';
 
 import data from './data';
 
+// materials
 const materials = {};
 data.materials.forEach((material) => {
   materials[material.name] = new Material(material);
@@ -64,19 +65,17 @@ scene.add( axesHelper );
 // gltf model
 const loader = new GLTFLoader();
 loader.load(
-	'models/bed.gltf',
+	data.model.url,
 	function ( gltf ) {
-    const object = gltf.scene;
-    
+    const object = gltf.scene;    
     object.traverse((child) => {
       
       if(child.isMesh) {
         // make object receive and cast shadows
         child.receiveShadow = true;
         child.castShadow = true;
-        
-        data.mappings.map((map) => {
-          console.log(map);
+
+        data.model.mappings.map((map) => {
           if(map.mesh === child.name) {
             child.material = materials[map.material].material;
           }
@@ -93,6 +92,15 @@ loader.load(
 		console.log( 'An error happened' );
 	}
 );
+
+// resize handler
+window.addEventListener( 'resize', onWindowResize, false );
+function onWindowResize(){
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize( window.innerWidth, window.innerHeight );
+}
+
 
 // animate
 function animate() {

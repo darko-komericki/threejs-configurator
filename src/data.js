@@ -45,34 +45,37 @@ export default
     }
   ],
 
-  "mappings": [
-    {
-      "mesh": "Fabric",
-      "material": "Kinhasa Quinted 14"
-    },
-    {
-      "mesh": "Fabric_Mettress",
-      "material": "Mattress"
-    },
-    {
-      "mesh": "Back",
-      "material": "Back"
-    },
-    {
-      "mesh": "Fabric_Mattress_Edge",
-      "material": "Mattress Edge"
-    },
-    {
-      "mesh": "Metal",
-      "material": "Metal"
-    },
-    {
-      "mesh": "Logo",
-      "material": "Metal"
-    },
-    {
-      "mesh": "Legs_Wood",
-      "material": "Wood"
-    }
-  ]
+  "model": {
+    "url" : "models/bed.gltf",
+    "mappings": [
+      {
+        "mesh": "Fabric",
+        "material": "Kinhasa Quinted 14"
+      },
+      {
+        "mesh": "Fabric_Mettress",
+        "material": "Mattress"
+      },
+      {
+        "mesh": "Back",
+        "material": "Back"
+      },
+      {
+        "mesh": "Fabric_Mattress_Edge",
+        "material": "Mattress Edge"
+      },
+      {
+        "mesh": "Metal",
+        "material": "Metal"
+      },
+      {
+        "mesh": "Logo",
+        "material": "Metal"
+      },
+      {
+        "mesh": "Legs_Wood",
+        "material": "Wood"
+      }
+    ]
+  }
 }
