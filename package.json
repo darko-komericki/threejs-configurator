@@ -1,0 +1,25 @@
+{
+  "name": "clip",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.14.0",
+    "@babel/preset-env": "^7.14.1",
+    "babel-loader": "^8.2.2",
+    "css-loader": "^5.2.4",
+    "normalize.css": "^8.0.1",
+    "style-loader": "^2.0.0",
+    "three": "^0.128.0",
+    "webpack": "^5.36.2",
+    "webpack-cli": "^4.6.0"
+  },
+  "dependencies": {
+    "webpack-dev-server": "^3.11.2"
+  },
+  "scripts": {
+    "watch": "webpack --watch",
+    "start": "webpack serve --open",
+    "build": "webpack"
+  }
+}
