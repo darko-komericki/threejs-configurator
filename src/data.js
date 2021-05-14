@@ -1,6 +1,6 @@
 export default
 {
-  "materials": [
+  "variableMaterials": [
     {
       "name": "Kinhasa Quinted 14",
       "color": "rgb(255, 255, 255)",
@@ -9,6 +9,24 @@ export default
       "aor": "textures/Kinshasa Quinted_ao_roughness.png",
       "roughness": 0.45
     },
+    {
+      "name": "Amarillo 103",
+      "color": "rgb(255, 255, 255)",
+      "texture": "textures/Amarillo_103_base.png",
+      "normal": "textures/Amarillo_Normal.png",
+      "aor": "textures/Amarillo_ao_roughness.png",
+      "roughness": 0.6
+    },
+    {
+      "name": "Amsterdam 26",
+      "color": "rgb(255, 255, 255)",
+      "texture": "textures/Amsterdam_26_base.png",
+      "normal": "textures/Amsterdam_normal.png",
+      "aor": "textures/Amsterdam_ao.png",
+      "roughness": 0.5
+    },
+  ],
+  "materials": [
     {
       "name": "Mattress",
       "color": "rgb(255, 255, 255)",
@@ -50,7 +68,7 @@ export default
     "mappings": [
       {
         "mesh": "Fabric",
-        "material": "Kinhasa Quinted 14"
+        "variableMaterial": "Kinhasa Quinted 14",
       },
       {
         "mesh": "Fabric_Mettress",

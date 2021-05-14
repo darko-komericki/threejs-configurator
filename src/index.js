@@ -11,18 +11,38 @@ import params from './params';
 
 import data from './data';
 
+const sidebar = $('#sidebar');
+const main = $('#main');
+
 // materials
 const materials = {};
 data.materials.forEach((material) => {
   materials[material.name] = new Material(material);
 });
 
+// variable materials
+const variableMaterials = {};
+data.variableMaterials.forEach((material) => {
+  variableMaterials[material.name] = new Material(material);
+});
+
+// add materials to sidebar
+for (const material in variableMaterials) {
+  let link = `
+    <a href="#" data-material="${variableMaterials[material].name}">
+      <img src="${variableMaterials[material].textureMapURL}" alt="" />
+      ${variableMaterials[material].name}
+    </a>
+  `;
+  sidebar.append(link);
+};
+
 // scene
 const scene = new THREE.Scene();
 scene.background = new THREE.Color( 0xf7f7f7 );
 
 // camera
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+const camera = new THREE.PerspectiveCamera(75, main.innerWidth() / main.innerHeight(), 0.1, 10000);
 camera.position.set( 2, 1, 1.5 );
 scene.add( camera );
 
@@ -30,10 +50,10 @@ scene.add( camera );
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setSize( main.innerWidth(), main.innerHeight() );
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-document.body.appendChild( renderer.domElement );
+main.append( renderer.domElement );
 
 // hemi light
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x666666, 0.3);
@@ -64,19 +84,24 @@ scene.add( axesHelper );
 
 // gltf model
 const loader = new GLTFLoader();
+let object = null;
+
 loader.load(
 	data.model.url,
 	function ( gltf ) {
-    const object = gltf.scene;    
+    object = gltf.scene;  
     object.traverse((child) => {
       
       if(child.isMesh) {
-        // make object receive and cast shadows
         child.receiveShadow = true;
         child.castShadow = true;
 
         data.model.mappings.map((map) => {
-          if(map.mesh === child.name) {
+          if(map.mesh === child.name && map.variableMaterial) {
+            child.material = variableMaterials[map.variableMaterial].material;
+          }
+
+          if(map.mesh === child.name && !map.variableMaterial) {
             child.material = materials[map.material].material;
           }
         })
@@ -93,12 +118,26 @@ loader.load(
 	}
 );
 
+// add events to sidebar links
+$('body').on('click', $('a[data-material]'), function(event){
+  event.preventDefault();
+  object.traverse((child) => {
+    if(child.isMesh) {
+      data.model.mappings.map((map) => {
+        if(map.mesh === child.name && map.variableMaterial) {
+          child.material = variableMaterials[$(event.target).data('material')].material;
+        }
+      })
+    }
+  });
+});
+
 // resize handler
 window.addEventListener( 'resize', onWindowResize, false );
 function onWindowResize(){
-  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.aspect = main.innerWidth() / main.innerHeight();
   camera.updateProjectionMatrix();
-  renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer.setSize( main.innerWidth(), main.innerHeight() );
 }
 
 
@@ -121,11 +160,13 @@ gui.add(params, 'textureScale').min(0.001).max(0.01).step(.0001).listen().onChan
     materials[mat].normalMap.repeat.set( params.textureScale, params.textureScale );
     materials[mat].aorMap.repeat.set( params.textureScale, params.textureScale );
   };
-})
 
-
-
-
+  for (const mat in variableMaterials) {
+    variableMaterials[mat].textureMap.repeat.set( params.textureScale, params.textureScale );
+    variableMaterials[mat].normalMap.repeat.set( params.textureScale, params.textureScale );
+    variableMaterials[mat].aorMap.repeat.set( params.textureScale, params.textureScale );
+  };
+});
 
 
 
