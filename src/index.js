@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader';
 import {UVsDebug} from 'three/examples/jsm/utils/UVsDebug';
 import {GUI} from 'three/examples/jsm/libs/dat.gui.module';
+import { LightProbeGenerator } from 'three/examples/jsm/lights/LightProbeGenerator';
 
 import Material from './Material';
 import params from './params';
@@ -26,6 +27,7 @@ data.variableMaterials.forEach((material) => {
   variableMaterials[material.name] = new Material(material);
 });
 
+
 // add materials to sidebar
 for (const material in variableMaterials) {
   let link = `
@@ -41,10 +43,79 @@ for (const material in variableMaterials) {
 const scene = new THREE.Scene();
 scene.background = new THREE.Color( 0xf7f7f7 );
 
+// define lights
+const lightProbe = new THREE.LightProbe();
+
+const urls = [
+  '/textures/px.png',
+  '/textures/nx.png',
+  '/textures/py.png',
+  '/textures/ny.png',
+  '/textures/pz.png',
+  '/textures/nz.png',
+];
+
+let lpLight = null;
+
+new THREE.CubeTextureLoader().load(urls, function (cubeTexture) {
+  cubeTexture.encoding = THREE.sRGBEncoding;
+  lightProbe.copy(LightProbeGenerator.fromCubeTexture(cubeTexture));
+  lightProbe.intensity = params.lightProbe;
+
+  lpLight = lightProbe;
+
+  // attach envMap to all materials
+  for (const material in variableMaterials) {
+    variableMaterials[material].material.envMap = cubeTexture;
+    variableMaterials[material].material.envMapIntensity = params.environment;
+  };
+  for (const material in materials) {
+    materials[material].material.envMap = cubeTexture;
+    materials[material].material.envMapIntensity = params.environment;
+  };
+
+  // optional background
+  // scene.background = cubeTexture;
+
+  // const material = new THREE.MeshStandardMaterial({
+  //   color: 0xffffff,
+  //   metalness: 0,
+  //   roughness: 0,
+  //   envMap: cubeTexture,
+  //   envMapIntensity: API.envMapIntensity,
+  // });
+});
+
+// Main Light
+const mainLight = new THREE.DirectionalLight(0xffffff, params.mainLight);
+mainLight.castShadow = true;
+mainLight.shadow.mapSize.width = 250;
+mainLight.shadow.mapSize.height = 250;
+mainLight.position.set(0, 250, 0);
+scene.add(mainLight);
+const helper = new THREE.DirectionalLightHelper(mainLight, 1, 0x000000);
+scene.add(helper);
+
+// add lights
+scene.add(lightProbe);
+
+
 // camera
-const camera = new THREE.PerspectiveCamera(75, main.innerWidth() / main.innerHeight(), 0.1, 10000);
+const camera = new THREE.PerspectiveCamera(75, main.innerWidth() / main.innerHeight(), 0.1, 20);
 camera.position.set( 2, 1, 1.5 );
 scene.add( camera );
+
+// floor
+const floorGeometry = new THREE.PlaneGeometry(2000, 2000);
+floorGeometry.rotateX(- Math.PI / 2);
+
+const floorMaterial = new THREE.ShadowMaterial();
+floorMaterial.opacity = 0.2;
+
+const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+floor.position.y = 0;
+floor.receiveShadow = true;
+scene.add(floor);;
 
 // renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -54,18 +125,6 @@ renderer.setSize( main.innerWidth(), main.innerHeight() );
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 main.append( renderer.domElement );
-
-// hemi light
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0x666666, 0.3);
-scene.add(hemiLight);
-
-// directional light
-const directionalLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
-directionalLight.castShadow = true;
-// directionalLight.shadow.bias = -0.0001;
-directionalLight.shadow.mapSize.width = 1024*4;
-directionalLight.shadow.mapSize.height = 1024*4;
-scene.add( directionalLight );
 
 // controls
 const controls = new OrbitControls( camera, renderer.domElement );
@@ -81,6 +140,7 @@ controls.update();
 // axes helper
 const axesHelper = new THREE.AxesHelper( 1.5 );
 scene.add( axesHelper );
+
 
 // gltf model
 const loader = new GLTFLoader();
@@ -121,15 +181,17 @@ loader.load(
 // add events to sidebar links
 $('body').on('click', $('a[data-material]'), function(event){
   event.preventDefault();
-  object.traverse((child) => {
-    if(child.isMesh) {
-      data.model.mappings.map((map) => {
-        if(map.mesh === child.name && map.variableMaterial) {
-          child.material = variableMaterials[$(event.target).data('material')].material;
-        }
-      })
-    }
-  });
+  if ($(event.target).data('material')) {
+    object.traverse((child) => {
+      if (child.isMesh) {
+        data.model.mappings.map((map) => {
+          if (map.mesh === child.name && map.variableMaterial) {
+            child.material = variableMaterials[$(event.target).data('material')].material;
+          }
+        })
+      }
+    });
+  }
 });
 
 // resize handler
@@ -145,7 +207,7 @@ function onWindowResize(){
 function animate() {
 	requestAnimationFrame( animate );
   controls.update();
-  directionalLight.position.set(camera.position.x+1, camera.position.y+1, camera.position.z+1);
+  // directionalLight.position.set(camera.position.x+1, camera.position.y+1, camera.position.z+1);
 	renderer.render( scene, camera );
 }
 
@@ -168,6 +230,30 @@ gui.add(params, 'textureScale').min(0.001).max(0.01).step(.0001).listen().onChan
   };
 });
 
+gui.add(params, 'environment').min(0).max(1).step(.01).listen().onChange(function (value) {
+  params.environment = value;
+
+  for (const mat in materials) {
+    materials[mat].material.envMapIntensity = params.environment;
+  };
+
+  for (const mat in variableMaterials) {
+    variableMaterials[mat].material.envMapIntensity = params.environment;
+  };
+});
+
+
+gui.add(params, 'mainLight').min(0).max(1).step(.01).listen().onChange(function (value) {
+  params.mainLight = value;
+
+  mainLight.intensity = params.mainLight;
+});
+
+gui.add(params, 'lightProbe').min(0).max(1).step(.01).listen().onChange(function (value) {
+  params.lightProbe = value;
+
+  lpLight.intensity = params.lightProbe;
+});
 
 
 

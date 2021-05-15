@@ -27,6 +27,7 @@ class Material {
     this.normalMapURL === null ? null : this.material.normalMap = this.normalMap;
     this.aorMapURL === null ? null : this.material.roughnessMap = this.aorMap;
     this.aorMapURL === null ? null : this.material.aoMap = this.aorMap;
+    this.material.envMap = null;
   }
 
   texture(scale) {
