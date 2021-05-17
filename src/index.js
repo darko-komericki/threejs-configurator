@@ -43,7 +43,14 @@ for (const material in variableMaterials) {
 const scene = new THREE.Scene();
 scene.background = new THREE.Color( 0xf7f7f7 );
 
-// define lights
+// camera
+const camera = new THREE.PerspectiveCamera(75, main.innerWidth() / main.innerHeight(), 0.1, 20);
+camera.position.set(2, 1, 1.5);
+scene.add(camera);
+
+/**
+ * Light probe
+ */
 const lightProbe = new THREE.LightProbe();
 
 const urls = [
@@ -56,7 +63,7 @@ const urls = [
 ];
 
 let lpLight = null;
-
+let backgroundTexture = null;
 new THREE.CubeTextureLoader().load(urls, function (cubeTexture) {
   cubeTexture.encoding = THREE.sRGBEncoding;
   lightProbe.copy(LightProbeGenerator.fromCubeTexture(cubeTexture));
@@ -76,34 +83,34 @@ new THREE.CubeTextureLoader().load(urls, function (cubeTexture) {
 
   // optional background
   // scene.background = cubeTexture;
-
-  // const material = new THREE.MeshStandardMaterial({
-  //   color: 0xffffff,
-  //   metalness: 0,
-  //   roughness: 0,
-  //   envMap: cubeTexture,
-  //   envMapIntensity: API.envMapIntensity,
-  // });
+  backgroundTexture = cubeTexture;
 });
 
-// Main Light
+scene.add(lightProbe);
+
+/**
+ * Main ligt
+ */
 const mainLight = new THREE.DirectionalLight(0xffffff, params.mainLight);
 mainLight.castShadow = true;
 mainLight.shadow.mapSize.width = 250;
 mainLight.shadow.mapSize.height = 250;
 mainLight.position.set(0, 250, 0);
 scene.add(mainLight);
-const helper = new THREE.DirectionalLightHelper(mainLight, 1, 0x000000);
-scene.add(helper);
+// const helper = new THREE.DirectionalLightHelper(mainLight, 1, 0x000000);
+// scene.add(helper);
 
-// add lights
-scene.add(lightProbe);
-
-
-// camera
-const camera = new THREE.PerspectiveCamera(75, main.innerWidth() / main.innerHeight(), 0.1, 20);
-camera.position.set( 2, 1, 1.5 );
-scene.add( camera );
+/**
+ * fill light
+ */
+const fillLight = new THREE.DirectionalLight(0xffffff, params.fillLight);
+// fillLight.castShadow = true;
+// fillLight.shadow.mapSize.width = 250;
+// fillLight.shadow.mapSize.height = 250;
+// fillLight.position.set(camera.position.x + 1, camera.position.y + 1, camera.position.z + 1);
+scene.add(fillLight);
+// const fillLightHelper = new THREE.DirectionalLightHelper(fillLight, 1, 0x000000);
+// scene.add(fillLightHelper);
 
 // floor
 const floorGeometry = new THREE.PlaneGeometry(2000, 2000);
@@ -138,9 +145,8 @@ controls.maxPolarAngle = Math.PI / 2;
 controls.update();
 
 // axes helper
-const axesHelper = new THREE.AxesHelper( 1.5 );
-scene.add( axesHelper );
-
+// const axesHelper = new THREE.AxesHelper( 1.5 );
+// scene.add( axesHelper );
 
 // gltf model
 const loader = new GLTFLoader();
@@ -202,12 +208,11 @@ function onWindowResize(){
   renderer.setSize( main.innerWidth(), main.innerHeight() );
 }
 
-
 // animate
 function animate() {
 	requestAnimationFrame( animate );
   controls.update();
-  // directionalLight.position.set(camera.position.x+1, camera.position.y+1, camera.position.z+1);
+  fillLight.position.set(camera.position.x - 0.5, camera.position.y + 0.5, camera.position.z + 0.5);
 	renderer.render( scene, camera );
 }
 
@@ -249,12 +254,28 @@ gui.add(params, 'mainLight').min(0).max(1).step(.01).listen().onChange(function 
   mainLight.intensity = params.mainLight;
 });
 
+gui.add(params, 'fillLight').min(0).max(1).step(.01).listen().onChange(function (value) {
+  params.fillLight = value;
+
+  fillLight.intensity = params.fillLight;
+});
+
 gui.add(params, 'lightProbe').min(0).max(1).step(.01).listen().onChange(function (value) {
   params.lightProbe = value;
 
   lpLight.intensity = params.lightProbe;
 });
 
+
+gui.add(params, 'background').onChange(function (value) {
+  params.background = value;
+
+  if (params.background) {
+    scene.background = backgroundTexture;
+  } else {
+    scene.background = new THREE.Color(0xf7f7f7);
+  }
+});
 
 
 
