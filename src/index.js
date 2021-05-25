@@ -45,6 +45,7 @@ scene.background = new THREE.Color( 0xf7f7f7 );
 
 // camera
 const camera = new THREE.PerspectiveCamera(75, main.innerWidth() / main.innerHeight(), 0.1, 20);
+let cameraLimit = 0.2;
 camera.position.set(2, 1, 1.5);
 scene.add(camera);
 
@@ -54,12 +55,12 @@ scene.add(camera);
 const lightProbe = new THREE.LightProbe();
 
 const urls = [
-  '/textures/px.png',
-  '/textures/nx.png',
-  '/textures/py.png',
-  '/textures/ny.png',
-  '/textures/pz.png',
-  '/textures/nz.png',
+  './textures/px.png',
+  './textures/nx.png',
+  './textures/py.png',
+  './textures/ny.png',
+  './textures/pz.png',
+  './textures/nz.png',
 ];
 
 let lpLight = null;
@@ -91,13 +92,14 @@ scene.add(lightProbe);
 /**
  * Main ligt
  */
-const mainLight = new THREE.DirectionalLight(0xffffff, params.mainLight);
-mainLight.castShadow = true;
-mainLight.shadow.mapSize.width = 250;
-mainLight.shadow.mapSize.height = 250;
-mainLight.position.set(0, 250, 0);
-scene.add(mainLight);
-// const helper = new THREE.DirectionalLightHelper(mainLight, 1, 0x000000);
+const keyLight = new THREE.DirectionalLight(0xffffff, params.keyLight);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.width = 512;
+keyLight.shadow.mapSize.height = 512;
+keyLight.position.set(0, 250, 20);
+// keyLight.shadow.bias = 0.0001;
+scene.add(keyLight);
+// const helper = new THREE.DirectionalLightHelper(keyLight, 1, 0x000000);
 // scene.add(helper);
 
 /**
@@ -117,7 +119,7 @@ const floorGeometry = new THREE.PlaneGeometry(2000, 2000);
 floorGeometry.rotateX(- Math.PI / 2);
 
 const floorMaterial = new THREE.ShadowMaterial();
-floorMaterial.opacity = 0.2;
+floorMaterial.opacity = 0.5;
 
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.position.y = 0;
@@ -139,9 +141,9 @@ controls.listenToKeyEvents( window );
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.screenSpacePanning = false;
-controls.minDistance = 0.2;
-controls.maxDistance = 5;
-controls.maxPolarAngle = Math.PI / 2;
+controls.minDistance = cameraLimit;
+controls.maxDistance = Infinity;
+controls.maxPolarAngle = (Math.PI / 2) - 0.1;
 controls.update();
 
 // axes helper
@@ -155,9 +157,21 @@ let object = null;
 loader.load(
 	data.model.url,
 	function ( gltf ) {
-    object = gltf.scene;  
+    object = gltf.scene;
+
+    const boxLimits = new THREE.BoxHelper(object);
+    boxLimits.geometry.computeBoundingBox();
+
+    const min = boxLimits.geometry.boundingBox.min;
+    const max = boxLimits.geometry.boundingBox.max;
+    const maxKey = Object.keys(max).reduce(function (a, b) { return max[a] > max[b] ? a : b });
+    cameraLimit = max[maxKey] * 2;
+    controls.minDistance = cameraLimit;
+    controls.update();
+
+
+
     object.traverse((child) => {
-      
       if(child.isMesh) {
         child.receiveShadow = true;
         child.castShadow = true;
@@ -248,10 +262,10 @@ gui.add(params, 'environment').min(0).max(1).step(.01).listen().onChange(functio
 });
 
 
-gui.add(params, 'mainLight').min(0).max(1).step(.01).listen().onChange(function (value) {
-  params.mainLight = value;
+gui.add(params, 'keyLight').min(0).max(1).step(.01).listen().onChange(function (value) {
+  params.keyLight = value;
 
-  mainLight.intensity = params.mainLight;
+  keyLight.intensity = params.keyLight;
 });
 
 gui.add(params, 'fillLight').min(0).max(1).step(.01).listen().onChange(function (value) {
